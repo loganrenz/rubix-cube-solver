@@ -44,11 +44,13 @@ export const useCube = () => {
       reset();
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      const scrambleMoves = cubeModel.value.scramble(25);
+      // Generate scramble sequence without mutating, then animate once to apply
+      const scrambleMoves = cubeModel.value.generateScrambleMoves(25);
       solution.value = scrambleMoves.map((move) => ({ move }));
 
-      // Animate scramble quickly
+      // Animate scramble quickly (applies the scramble to the cube)
       animationState.speed = 100;
+      animationState.currentStep = 0;
       await animateSolution();
     } catch (e) {
       error.value = 'Failed to scramble cube';

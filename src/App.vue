@@ -35,9 +35,10 @@
                     <div class="p-4">
                         <ControlPanel v-show="activeTab === 'controls'" :solution="solution"
                             :animation-state="animationState" :is-scrambling="isScrambling" :is-solving="isSolving"
-                            :is-solved="isSolved" :error="error" :current-move="currentMove" @scramble="scramble"
-                            @solve="solve" @reset="reset" @play="play" @pause="pause" @step-forward="stepForward"
-                            @step-backward="stepBackward" @set-speed="setSpeed" @apply-move="applyMove" />
+                            :is-solved="isSolved" :error="error" :current-move="currentMove" :cube-state="cubeState"
+                            @scramble="scramble" @solve="solve" @reset="reset" @play="play" @pause="pause"
+                            @step-forward="stepForward" @step-backward="stepBackward" @set-speed="setSpeed"
+                            @apply-move="applyMove" @import-state="importState" />
 
                         <SolutionDisplay v-show="activeTab === 'solution'" :solution="solution"
                             :current-step-index="animationState.currentStep - 1" />
@@ -50,10 +51,10 @@
                 <!-- Left Panel - Controls -->
                 <div class="col-span-3">
                     <ControlPanel :solution="solution" :animation-state="animationState" :is-scrambling="isScrambling"
-                        :is-solving="isSolving" :is-solved="isSolved" :error="error" :current-move="currentMove"
+                        :is-solving="isSolving" :is-solved="isSolved" :error="error" :current-move="currentMove" :cube-state="cubeState"
                         @scramble="scramble" @solve="solve" @reset="reset" @play="play" @pause="pause"
                         @step-forward="stepForward" @step-backward="stepBackward" @set-speed="setSpeed"
-                        @apply-move="applyMove" />
+                        @apply-move="applyMove" @import-state="importState" />
                 </div>
 
                 <!-- Center - 3D Cube -->
@@ -109,7 +110,8 @@ const {
     pause,
     stepForward,
     stepBackward,
-    setSpeed
+    setSpeed,
+    importState
 } = useCube()
 
 // UI state
