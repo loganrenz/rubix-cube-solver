@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { Color, Move } from '../types/cube'
@@ -16,7 +16,7 @@ import type { CubeState } from '../types/cube'
 
 const props = defineProps<{
     cubeState: CubeState
-    currentMove?: Move | null
+    currentMove?: Move | null | undefined
     isDark: boolean
 }>()
 
@@ -85,8 +85,8 @@ const createCubeFace = (faceColors: Color[][], faceInfo: typeof facePositions[0]
     }
 
     // Apply rotation and position
-    group.rotation.set(...faceInfo.rotation)
-    group.position.set(...faceInfo.position)
+    group.rotation.set(faceInfo.rotation[0], faceInfo.rotation[1], faceInfo.rotation[2])
+    group.position.set(faceInfo.position[0], faceInfo.position[1], faceInfo.position[2])
 
     return group
 }

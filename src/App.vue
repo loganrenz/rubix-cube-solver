@@ -8,7 +8,7 @@
                 <!-- 3D Cube View -->
                 <div class="mb-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4"
                     style="height: 60vh; max-height: 400px;">
-                    <CubeVisualization :cube-state="cubeState" :current-move="currentMove" :is-dark="isDark" />
+                    <CubeVisualization :cube-state="cubeState" :current-move="currentMove?.move || null" :is-dark="isDark" />
                 </div>
 
                 <!-- Tabbed Interface for Controls/Solution -->
@@ -60,7 +60,7 @@
                 <div class="col-span-6">
                     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4"
                         style="height: 70vh; min-height: 500px;">
-                        <CubeVisualization :cube-state="cubeState" :current-move="currentMove" :is-dark="isDark" />
+                        <CubeVisualization :cube-state="cubeState" :current-move="currentMove?.move || null" :is-dark="isDark" />
                     </div>
                 </div>
 

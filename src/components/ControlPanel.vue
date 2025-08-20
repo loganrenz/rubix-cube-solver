@@ -56,7 +56,7 @@
                 <div class="flex items-center gap-1">
                     <label for="speed" class="text-xs text-gray-600 dark:text-gray-400">Speed:</label>
                     <input id="speed" type="range" min="50" max="1000" step="50" :value="1050 - animationState.speed"
-                        @input="setSpeed(1050 - Number($event.target.value))" class="flex-1" />
+                        @input="setSpeed(1050 - Number(($event.target as HTMLInputElement).value))" class="flex-1" />
                 </div>
             </div>
 
@@ -98,7 +98,7 @@
 import { Move } from '../types/cube'
 import type { SolutionStep, AnimationState } from '../types/cube'
 
-const props = defineProps<{
+defineProps<{
     solution: SolutionStep[]
     animationState: AnimationState
     isScrambling: boolean

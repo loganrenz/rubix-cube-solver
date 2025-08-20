@@ -1,4 +1,4 @@
-import { Color, Face, Move } from '../types/cube';
+import { Color, Move } from '../types/cube';
 import type { CubeState, CubeFace } from '../types/cube';
 
 export class CubeModel {

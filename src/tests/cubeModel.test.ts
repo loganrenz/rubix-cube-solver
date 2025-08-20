@@ -150,7 +150,7 @@ describe('CubeModel', () => {
     it('should set and get state correctly', () => {
       const originalState = cube.getState();
       cube.scramble(10);
-      const scrambledState = cube.getState();
+      // const scrambledState = cube.getState();
 
       expect(cube.isSolved()).toBe(false);
 

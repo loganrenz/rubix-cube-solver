@@ -250,7 +250,7 @@ export class LayerByLayerSolver {
 
   // Step 2: Solve white corners
   private solveWhiteCorners(): void {
-    const stage = 'First Layer';
+    // const stage = 'First Layer';
 
     // Solve each corner
     this.solveWhiteCorner([Color.RED, Color.GREEN], 'Red-Green-White corner');

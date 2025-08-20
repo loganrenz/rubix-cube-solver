@@ -66,7 +66,7 @@ export const useCube = () => {
 
     try {
       // Create a solver with current state
-      const solver = new LayerByLayerSolver(cubeModel.value);
+      const solver = new LayerByLayerSolver(cubeModel.value as any);
       const result = await new Promise<ReturnType<typeof solver.solve>>((resolve) => {
         setTimeout(() => resolve(solver.solve()), 100);
       });
