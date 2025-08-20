@@ -14,59 +14,26 @@ export class LayerByLayerSolver {
     this.solution = [];
 
     try {
-      // Check if cube is already solved
-      if (this.cube.isSolved()) {
-        return {
-          solved: true,
-          steps: [],
-          moveCount: 0,
-        };
-      }
-
-      // Add global safety check - don't allow solutions longer than 500 moves
-      const MAX_SOLUTION_LENGTH = 500;
-
       // Step 1: Solve white cross
       this.solveWhiteCross();
-      if (this.solution.length > MAX_SOLUTION_LENGTH) {
-        throw new Error('Solution too long - aborting to prevent infinite loop');
-      }
 
       // Step 2: Solve white corners (complete first layer)
       this.solveWhiteCorners();
-      if (this.solution.length > MAX_SOLUTION_LENGTH) {
-        throw new Error('Solution too long - aborting to prevent infinite loop');
-      }
 
       // Step 3: Solve middle layer
       this.solveMiddleLayer();
-      if (this.solution.length > MAX_SOLUTION_LENGTH) {
-        throw new Error('Solution too long - aborting to prevent infinite loop');
-      }
 
       // Step 4: Make yellow cross
       this.makeYellowCross();
-      if (this.solution.length > MAX_SOLUTION_LENGTH) {
-        throw new Error('Solution too long - aborting to prevent infinite loop');
-      }
 
       // Step 5: Position yellow cross
       this.positionYellowCross();
-      if (this.solution.length > MAX_SOLUTION_LENGTH) {
-        throw new Error('Solution too long - aborting to prevent infinite loop');
-      }
 
       // Step 6: Position yellow corners
       this.positionYellowCorners();
-      if (this.solution.length > MAX_SOLUTION_LENGTH) {
-        throw new Error('Solution too long - aborting to prevent infinite loop');
-      }
 
       // Step 7: Orient yellow corners
       this.orientYellowCorners();
-      if (this.solution.length > MAX_SOLUTION_LENGTH) {
-        throw new Error('Solution too long - aborting to prevent infinite loop');
-      }
 
       return {
         solved: this.cube.isSolved(),
@@ -99,11 +66,6 @@ export class LayerByLayerSolver {
   private solveWhiteCross(): void {
     const stage = 'White Cross';
 
-    // Check if white cross is already complete
-    if (this.isWhiteCrossComplete()) {
-      return;
-    }
-
     // Orient cube with white on top
     const state = this.cube.getState();
     if (state.down.colors[1][1] === Color.WHITE) {
@@ -117,7 +79,6 @@ export class LayerByLayerSolver {
     } else if (state.right.colors[1][1] === Color.WHITE) {
       this.addMove(Move.z_PRIME, 'Orient white face up', stage);
     }
-    // If white is already on top (state.up.colors[1][1] === Color.WHITE), do nothing
 
     // Solve each edge piece
     this.solveWhiteEdge(Color.RED, 'Red-White edge');
@@ -140,10 +101,8 @@ export class LayerByLayerSolver {
       switch (edgePosition.face) {
         case 'U':
           // Edge is already on top, just position it
-          let uMoveAttempts = 0;
-          while (!this.isWhiteEdgeCorrect(targetColor) && uMoveAttempts < 4) {
+          while (!this.isWhiteEdgeCorrect(targetColor)) {
             this.addMove(Move.U, description, stage);
-            uMoveAttempts++;
           }
           break;
         case 'F':
@@ -184,10 +143,8 @@ export class LayerByLayerSolver {
           break;
         case 'D':
           // Edge is on bottom, bring it up
-          let dMoveAttempts = 0;
-          while (!this.isEdgeAlignedForInsertion(targetColor) && dMoveAttempts < 4) {
+          while (!this.isEdgeAlignedForInsertion(targetColor)) {
             this.addMove(Move.D, description, stage);
-            dMoveAttempts++;
           }
           // Insert edge
           const insertFace = this.getTargetFace(targetColor);
@@ -200,13 +157,6 @@ export class LayerByLayerSolver {
 
       attempts++;
     }
-  }
-
-  private isWhiteCrossComplete(): boolean {
-    return this.isWhiteEdgeCorrect(Color.RED) &&
-           this.isWhiteEdgeCorrect(Color.BLUE) &&
-           this.isWhiteEdgeCorrect(Color.ORANGE) &&
-           this.isWhiteEdgeCorrect(Color.GREEN);
   }
 
   private isWhiteEdgeCorrect(targetColor: Color): boolean {
@@ -302,11 +252,6 @@ export class LayerByLayerSolver {
   private solveWhiteCorners(): void {
     // const stage = 'First Layer';
 
-    // Check if white corners are already complete
-    if (this.isFirstLayerComplete()) {
-      return;
-    }
-
     // Solve each corner
     this.solveWhiteCorner([Color.RED, Color.GREEN], 'Red-Green-White corner');
     this.solveWhiteCorner([Color.RED, Color.BLUE], 'Red-Blue-White corner');
@@ -349,13 +294,6 @@ export class LayerByLayerSolver {
 
       attempts++;
     }
-  }
-
-  private isFirstLayerComplete(): boolean {
-    return this.isWhiteCornerCorrect([Color.RED, Color.GREEN]) &&
-           this.isWhiteCornerCorrect([Color.RED, Color.BLUE]) &&
-           this.isWhiteCornerCorrect([Color.ORANGE, Color.BLUE]) &&
-           this.isWhiteCornerCorrect([Color.ORANGE, Color.GREEN]);
   }
 
   private isWhiteCornerCorrect(colors: Color[]): boolean {
@@ -434,11 +372,9 @@ export class LayerByLayerSolver {
     const targetPosition = this.getTargetCornerPosition(colors);
     let currentPosition = this.getCurrentCornerPosition([Color.WHITE, ...colors]);
 
-    let positionAttempts = 0;
-    while (currentPosition !== targetPosition && positionAttempts < 4) {
+    while (currentPosition !== targetPosition) {
       this.addMove(Move.U, 'Position corner', 'First Layer');
       currentPosition = this.getCurrentCornerPosition([Color.WHITE, ...colors]);
-      positionAttempts++;
     }
   }
 
@@ -484,11 +420,6 @@ export class LayerByLayerSolver {
   // Step 3: Solve middle layer
   private solveMiddleLayer(): void {
     const stage = 'Second Layer';
-
-    // Check if second layer is already complete
-    if (this.isSecondLayerComplete()) {
-      return;
-    }
 
     // Flip cube so yellow is on top
     this.addMoves([Move.x2], 'Flip cube - yellow on top', stage);
@@ -560,13 +491,6 @@ export class LayerByLayerSolver {
     }
   }
 
-  private isSecondLayerComplete(): boolean {
-    return this.isMiddleEdgeCorrect([Color.RED, Color.GREEN]) &&
-           this.isMiddleEdgeCorrect([Color.RED, Color.BLUE]) &&
-           this.isMiddleEdgeCorrect([Color.ORANGE, Color.BLUE]) &&
-           this.isMiddleEdgeCorrect([Color.ORANGE, Color.GREEN]);
-  }
-
   private isMiddleEdgeCorrect(colors: Color[]): boolean {
     const state = this.cube.getState();
 
@@ -633,11 +557,9 @@ export class LayerByLayerSolver {
     const targetPosition = this.getTargetEdgePosition(colors);
     let currentPosition = this.getCurrentTopEdgePosition(colors);
 
-    let positionAttempts = 0;
-    while (currentPosition !== targetPosition && positionAttempts < 4) {
+    while (currentPosition !== targetPosition) {
       this.addMove(Move.U, 'Position edge', 'Second Layer');
       currentPosition = this.getCurrentTopEdgePosition(colors);
-      positionAttempts++;
     }
   }
 
@@ -710,11 +632,6 @@ export class LayerByLayerSolver {
   // Step 4: Make yellow cross
   private makeYellowCross(): void {
     const stage = 'Yellow Cross';
-
-    // Check if yellow cross is already complete
-    if (this.hasYellowCross()) {
-      return;
-    }
 
     let attempts = 0;
     const maxAttempts = 10;
@@ -814,12 +731,6 @@ export class LayerByLayerSolver {
   // Step 5: Position yellow cross
   private positionYellowCross(): void {
     const stage = 'Position Yellow Cross';
-
-    // Check if yellow cross is already positioned correctly
-    if (this.isYellowCrossPositioned()) {
-      return;
-    }
-
     let attempts = 0;
     const maxAttempts = 10;
 
@@ -893,12 +804,6 @@ export class LayerByLayerSolver {
   // Step 6: Position yellow corners
   private positionYellowCorners(): void {
     const stage = 'Position Yellow Corners';
-
-    // Check if yellow corners are already positioned correctly
-    if (this.areYellowCornersPositioned()) {
-      return;
-    }
-
     let attempts = 0;
     const maxAttempts = 10;
 
@@ -1005,10 +910,8 @@ export class LayerByLayerSolver {
 
     // Process each corner
     for (let i = 0; i < 4; i++) {
-      let orientAttempts = 0;
-      while (!this.isCornerOriented() && orientAttempts < 6) {
+      while (!this.isCornerOriented()) {
         this.addMoves([Move.R_PRIME, Move.D_PRIME, Move.R, Move.D], 'Orient corner', stage);
-        orientAttempts++;
       }
 
       if (i < 3) {
