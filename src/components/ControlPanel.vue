@@ -16,6 +16,9 @@
                 <button @click="reset" :disabled="animationState.isAnimating" class="btn-secondary col-span-2">
                     Reset
                 </button>
+                <button @click="toggleEdit" :disabled="animationState.isAnimating" class="btn-secondary col-span-2">
+                    {{ isEditing ? 'Exit Edit Mode' : 'Enter Edit Mode' }}
+                </button>
             </div>
         </div>
 
@@ -70,6 +73,28 @@
             </div>
         </div>
 
+        <!-- Import Cube State -->
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold mb-3 text-gray-800 dark:text-gray-200">Import Cube State</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Paste a cube state JSON to set the cube. You can also prefill with the current cube state, edit, and apply.</p>
+            <div class="flex gap-2 mb-2">
+                <button @click="prefillState" :disabled="animationState.isAnimating" class="btn-secondary">Prefill current state</button>
+                <button @click="applyState" :disabled="animationState.isAnimating || stateInput.trim().length === 0" class="btn-primary">Apply state</button>
+            </div>
+            <textarea v-model="stateInput" class="w-full h-32 p-2 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm font-mono" placeholder='{"front": {"colors": [["green",...]]}, ...}' />
+        </div>
+
+        <!-- Edit Mode Color Picker -->
+        <div v-if="isEditing" class="mb-6">
+            <h3 class="text-lg font-semibold mb-3 text-gray-800 dark:text-gray-200">Pick Color</h3>
+            <div class="grid grid-cols-6 gap-2">
+                <button v-for="c in colors" :key="c.key" :title="c.key" @click="selectColor(c.key)"
+                    :class="['h-8 rounded border', selectedColor === c.key ? 'ring-2 ring-blue-500' : '', 'border-gray-300 dark:border-gray-700']"
+                    :style="{ background: c.hex }"></button>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Click a sticker on the cube to set it to the selected color.</p>
+        </div>
+
         <!-- Manual Moves -->
         <div class="mb-6">
             <h3 class="text-lg font-semibold mb-3 text-gray-800 dark:text-gray-200">Manual Moves</h3>
@@ -98,7 +123,7 @@
 import { Move } from '../types/cube'
 import type { SolutionStep, AnimationState } from '../types/cube'
 
-defineProps<{
+const props = defineProps<{
     solution: SolutionStep[]
     animationState: AnimationState
     isScrambling: boolean
@@ -106,6 +131,7 @@ defineProps<{
     isSolved: boolean
     error: string | null
     currentMove: SolutionStep | null
+    cubeState: import('../types/cube').CubeState
 }>()
 
 const emit = defineEmits<{
@@ -118,6 +144,9 @@ const emit = defineEmits<{
     stepBackward: []
     setSpeed: [speed: number]
     applyMove: [move: Move]
+    importState: [stateString: string]
+    setEditMode: [value: boolean]
+    setSelectedColor: [color: import('../types/cube').Color]
 }>()
 
 const basicMoves: Move[] = [
@@ -138,6 +167,34 @@ const stepForward = () => emit('stepForward')
 const stepBackward = () => emit('stepBackward')
 const setSpeed = (speed: number) => emit('setSpeed', speed)
 const applyMove = (move: Move) => emit('applyMove', move)
+
+// Import cube state helpers
+import { ref } from 'vue'
+const stateInput = ref('')
+const prefillState = () => {
+    stateInput.value = JSON.stringify(props.cubeState)
+}
+const applyState = () => emit('importState', stateInput.value)
+
+// Edit mode state
+const isEditing = ref(false)
+const colors = [
+    { key: 'white', hex: '#FFFFFF' },
+    { key: 'yellow', hex: '#FFD500' },
+    { key: 'red', hex: '#B71234' },
+    { key: 'orange', hex: '#FF5800' },
+    { key: 'green', hex: '#009E60' },
+    { key: 'blue', hex: '#0046AD' }
+]
+const selectedColor = ref<'white' | 'yellow' | 'red' | 'orange' | 'green' | 'blue'>('white')
+const toggleEdit = () => {
+    isEditing.value = !isEditing.value
+    emit('setEditMode', isEditing.value)
+}
+const selectColor = (c: any) => {
+    selectedColor.value = c
+    emit('setSelectedColor', c)
+}
 </script>
 
 <style scoped>

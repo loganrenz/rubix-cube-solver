@@ -18,6 +18,12 @@ const props = defineProps<{
     cubeState: CubeState
     currentMove?: Move | null | undefined
     isDark: boolean
+    editMode?: boolean
+    selectedColor?: Color
+}>()
+
+const emit = defineEmits<{
+    stickerClick: [payload: { face: keyof CubeState; row: number; col: number }]
 }>()
 
 const containerRef = ref<HTMLDivElement>()
@@ -29,6 +35,7 @@ let camera: THREE.PerspectiveCamera
 let renderer: THREE.WebGLRenderer
 let controls: OrbitControls
 let cubeGroup: THREE.Group
+let clickableStickers: Array<{ mesh: THREE.Mesh, face: keyof CubeState, row: number, col: number }> = []
 let animationId: number
 
 const colorMap: Record<Color, string> = {
@@ -103,16 +110,31 @@ const createRubiksCube = () => {
     // Add faces
     const state = props.cubeState
     const faces = [
-        { colors: state.right.colors, info: facePositions[0] },
-        { colors: state.left.colors, info: facePositions[1] },
-        { colors: state.up.colors, info: facePositions[2] },
-        { colors: state.down.colors, info: facePositions[3] },
-        { colors: state.front.colors, info: facePositions[4] },
-        { colors: state.back.colors, info: facePositions[5] }
+        { name: 'right' as const, colors: state.right.colors, info: facePositions[0] },
+        { name: 'left' as const, colors: state.left.colors, info: facePositions[1] },
+        { name: 'up' as const, colors: state.up.colors, info: facePositions[2] },
+        { name: 'down' as const, colors: state.down.colors, info: facePositions[3] },
+        { name: 'front' as const, colors: state.front.colors, info: facePositions[4] },
+        { name: 'back' as const, colors: state.back.colors, info: facePositions[5] }
     ]
 
-    faces.forEach(({ colors, info }) => {
+    clickableStickers = []
+    faces.forEach(({ name, colors, info }) => {
         const face = createCubeFace(colors, info)
+        // Track stickers for raycasting
+        let idx = 0
+        face.children.forEach((child) => {
+            if (child instanceof THREE.Mesh) {
+                // skip the first backing mesh
+                if (idx > 0) {
+                    const stickerIndex = idx - 1
+                    const row = Math.floor(stickerIndex / 3)
+                    const col = stickerIndex % 3
+                    clickableStickers.push({ mesh: child as THREE.Mesh, face: name, row, col })
+                }
+                idx++
+            }
+        })
         cubeGroup.add(face)
     })
 
@@ -219,34 +241,44 @@ const handleResize = () => {
     renderer.setSize(width, height)
 }
 
-// Touch gesture handling for mobile
-let touchStartX = 0
-let touchStartY = 0
+// Touch/Click handling for editing
 let touchStartTime = 0
 
 const handleTouchStart = (e: TouchEvent) => {
     if (e.touches.length === 1) {
-        touchStartX = e.touches[0].clientX
-        touchStartY = e.touches[0].clientY
         touchStartTime = Date.now()
     }
 }
 
 const handleTouchEnd = (e: TouchEvent) => {
     if (e.changedTouches.length === 1 && Date.now() - touchStartTime < 300) {
-        const deltaX = e.changedTouches[0].clientX - touchStartX
-        const deltaY = e.changedTouches[0].clientY - touchStartY
+        if (props.editMode && props.selectedColor) {
+            const touch = e.changedTouches[0]
+            tryPickSticker(touch.clientX, touch.clientY)
+        }
+    }
+}
 
-        // Detect swipe gestures
-        if (Math.abs(deltaX) > 50 || Math.abs(deltaY) > 50) {
-            // Emit swipe event for parent to handle cube moves
-            if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                // Horizontal swipe
-                console.log(deltaX > 0 ? 'Swipe right' : 'Swipe left')
-            } else {
-                // Vertical swipe
-                console.log(deltaY > 0 ? 'Swipe down' : 'Swipe up')
-            }
+const handleClick = (e: MouseEvent) => {
+    if (!props.editMode || !props.selectedColor) return
+    tryPickSticker(e.clientX, e.clientY)
+}
+
+const tryPickSticker = (clientX: number, clientY: number) => {
+    if (!renderer || !camera || !containerRef.value) return
+    const rect = renderer.domElement.getBoundingClientRect()
+    const x = ((clientX - rect.left) / rect.width) * 2 - 1
+    const y = -((clientY - rect.top) / rect.height) * 2 + 1
+    const raycaster = new THREE.Raycaster()
+    raycaster.setFromCamera(new THREE.Vector2(x, y), camera)
+    const meshes = clickableStickers.map(s => s.mesh)
+    const hits = raycaster.intersectObjects(meshes, false)
+    if (hits.length > 0) {
+        const hit = hits[0].object as THREE.Mesh
+        const info = clickableStickers.find(s => s.mesh === hit)
+        if (info) {
+            // Emit event to parent to set sticker color
+            emit('stickerClick', { face: info.face, row: info.row, col: info.col })
         }
     }
 }
@@ -258,6 +290,7 @@ onMounted(() => {
     window.addEventListener('resize', handleResize)
     containerRef.value?.addEventListener('touchstart', handleTouchStart, { passive: true })
     containerRef.value?.addEventListener('touchend', handleTouchEnd, { passive: true })
+    containerRef.value?.addEventListener('click', handleClick)
 })
 
 onUnmounted(() => {
@@ -265,6 +298,7 @@ onUnmounted(() => {
     window.removeEventListener('resize', handleResize)
     containerRef.value?.removeEventListener('touchstart', handleTouchStart)
     containerRef.value?.removeEventListener('touchend', handleTouchEnd)
+    containerRef.value?.removeEventListener('click', handleClick)
 
     // Cleanup Three.js resources
     if (renderer) {

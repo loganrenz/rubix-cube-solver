@@ -1,8 +1,8 @@
 import { ref, computed, reactive } from 'vue';
 import { CubeModel } from '../utils/cubeModel';
 import { LayerByLayerSolver } from '../utils/solver';
-import { Move } from '../types/cube';
-import type { SolutionStep, AnimationState } from '../types/cube';
+import { Move, Color } from '../types/cube';
+import type { SolutionStep, AnimationState, CubeState } from '../types/cube';
 
 export const useCube = () => {
   const cubeModel = ref(new CubeModel());
@@ -44,11 +44,13 @@ export const useCube = () => {
       reset();
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      const scrambleMoves = cubeModel.value.scramble(25);
+      // Generate scramble sequence without mutating, then animate once to apply
+      const scrambleMoves = cubeModel.value.generateScrambleMoves(25);
       solution.value = scrambleMoves.map((move) => ({ move }));
 
-      // Animate scramble quickly
+      // Animate scramble quickly (applies the scramble to the cube)
       animationState.speed = 100;
+      animationState.currentStep = 0;
       await animateSolution();
     } catch (e) {
       error.value = 'Failed to scramble cube';
@@ -180,6 +182,17 @@ export const useCube = () => {
     return JSON.stringify(cubeState.value);
   };
 
+  const setSticker = (args: { face: keyof CubeState; row: number; col: number; color: Color }) => {
+    const { face, row, col, color } = args;
+    const state = cubeModel.value.getState();
+    if (!state[face] || !state[face].colors?.[row]?.[col]) return;
+    state[face].colors[row][col] = color;
+    cubeModel.value.setState(state);
+    solution.value = [];
+    animationState.currentStep = 0;
+    error.value = null;
+  };
+
   return {
     // State
     cubeState,
@@ -203,5 +216,6 @@ export const useCube = () => {
     setSpeed,
     importState,
     exportState,
+    setSticker,
   };
 };

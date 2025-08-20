@@ -478,6 +478,45 @@ export class CubeModel {
     return scrambleMoves;
   }
 
+  // Generate a valid scramble sequence without mutating the cube
+  generateScrambleMoves(moveCount: number = 20): Move[] {
+    const moves = [
+      Move.F,
+      Move.F_PRIME,
+      Move.F2,
+      Move.B,
+      Move.B_PRIME,
+      Move.B2,
+      Move.U,
+      Move.U_PRIME,
+      Move.U2,
+      Move.D,
+      Move.D_PRIME,
+      Move.D2,
+      Move.L,
+      Move.L_PRIME,
+      Move.L2,
+      Move.R,
+      Move.R_PRIME,
+      Move.R2,
+    ];
+
+    const scrambleMoves: Move[] = [];
+    let lastMove: Move | null = null;
+
+    for (let i = 0; i < moveCount; i++) {
+      let move: Move;
+      do {
+        move = moves[Math.floor(Math.random() * moves.length)];
+      } while (lastMove && this.areOppositeMoves(lastMove, move));
+
+      scrambleMoves.push(move);
+      lastMove = move;
+    }
+
+    return scrambleMoves;
+  }
+
   // Check if two moves cancel each other out
   private areOppositeMoves(move1: Move, move2: Move): boolean {
     const baseMoves: { [key: string]: string } = {

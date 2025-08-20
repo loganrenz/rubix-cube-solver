@@ -707,19 +707,23 @@ export class LayerByLayerSolver {
   }
 
   private positionLShape(): void {
-    const state = this.cube.getState();
-
-    // Position L with corner in back-left
-    while (!(state.up.colors[0][1] === Color.YELLOW && state.up.colors[1][0] === Color.YELLOW)) {
+    // Rotate top at most 4 times to position L with corner in back-left
+    for (let i = 0; i < 4; i++) {
+      const state = this.cube.getState();
+      if (state.up.colors[0][1] === Color.YELLOW && state.up.colors[1][0] === Color.YELLOW) {
+        break;
+      }
       this.addMove(Move.U, 'Position L-shape', 'Yellow Cross');
     }
   }
 
   private positionLine(): void {
-    const state = this.cube.getState();
-
-    // Position line horizontally
-    while (!(state.up.colors[1][0] === Color.YELLOW && state.up.colors[1][2] === Color.YELLOW)) {
+    // Rotate top at most 4 times to make the line horizontal
+    for (let i = 0; i < 4; i++) {
+      const state = this.cube.getState();
+      if (state.up.colors[1][0] === Color.YELLOW && state.up.colors[1][2] === Color.YELLOW) {
+        break;
+      }
       this.addMove(Move.U, 'Position line', 'Yellow Cross');
     }
   }
@@ -776,20 +780,24 @@ export class LayerByLayerSolver {
   }
 
   private positionCorrectEdges(): void {
-    const state = this.cube.getState();
-
     // Find which edges are correct and position them
-    if (state.front.colors[0][1] === Color.GREEN && state.back.colors[0][1] === Color.BLUE) {
-      // Front and back are correct, position them
+    const stateNow = this.cube.getState();
+    if (stateNow.front.colors[0][1] === Color.GREEN && stateNow.back.colors[0][1] === Color.BLUE) {
+      // Front and back are already correct
       return;
-    } else if (state.left.colors[0][1] === Color.ORANGE && state.right.colors[0][1] === Color.RED) {
+    }
+
+    if (stateNow.left.colors[0][1] === Color.ORANGE && stateNow.right.colors[0][1] === Color.RED) {
       // Left and right are correct, rotate to make front/back correct
       this.addMove(Move.U, 'Position correct edges', 'Position Yellow Cross');
-    } else {
-      // Adjacent edges are correct, position them to back and right
-      while (!(state.back.colors[0][1] === Color.BLUE && state.right.colors[0][1] === Color.RED)) {
-        this.addMove(Move.U, 'Position correct edges', 'Position Yellow Cross');
-      }
+      return;
+    }
+
+    // Adjacent edges are correct, position them to back and right (max 4 rotations)
+    for (let i = 0; i < 4; i++) {
+      const s = this.cube.getState();
+      if (s.back.colors[0][1] === Color.BLUE && s.right.colors[0][1] === Color.RED) break;
+      this.addMove(Move.U, 'Position correct edges', 'Position Yellow Cross');
     }
   }
 
@@ -912,9 +920,10 @@ export class LayerByLayerSolver {
     }
 
     // Align top layer
-    const state = this.cube.getState();
-    while (state.front.colors[0][1] !== Color.GREEN) {
+    let safety = 0;
+    while (this.cube.getState().front.colors[0][1] !== Color.GREEN && safety < 4) {
       this.addMove(Move.U, 'Align cube', stage);
+      safety++;
     }
   }
 
