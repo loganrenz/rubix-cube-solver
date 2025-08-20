@@ -242,14 +242,10 @@ const handleResize = () => {
 }
 
 // Touch/Click handling for editing
-let touchStartX = 0
-let touchStartY = 0
 let touchStartTime = 0
 
 const handleTouchStart = (e: TouchEvent) => {
     if (e.touches.length === 1) {
-        touchStartX = e.touches[0].clientX
-        touchStartY = e.touches[0].clientY
         touchStartTime = Date.now()
     }
 }
