@@ -16,6 +16,9 @@
                 <button @click="reset" :disabled="animationState.isAnimating" class="btn-secondary col-span-2">
                     Reset
                 </button>
+                <button @click="toggleEdit" :disabled="animationState.isAnimating" class="btn-secondary col-span-2">
+                    {{ isEditing ? 'Exit Edit Mode' : 'Enter Edit Mode' }}
+                </button>
             </div>
         </div>
 
@@ -81,6 +84,17 @@
             <textarea v-model="stateInput" class="w-full h-32 p-2 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm font-mono" placeholder='{"front": {"colors": [["green",...]]}, ...}' />
         </div>
 
+        <!-- Edit Mode Color Picker -->
+        <div v-if="isEditing" class="mb-6">
+            <h3 class="text-lg font-semibold mb-3 text-gray-800 dark:text-gray-200">Pick Color</h3>
+            <div class="grid grid-cols-6 gap-2">
+                <button v-for="c in colors" :key="c.key" :title="c.key" @click="selectColor(c.key)"
+                    :class="['h-8 rounded border', selectedColor === c.key ? 'ring-2 ring-blue-500' : '', 'border-gray-300 dark:border-gray-700']"
+                    :style="{ background: c.hex }"></button>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Click a sticker on the cube to set it to the selected color.</p>
+        </div>
+
         <!-- Manual Moves -->
         <div class="mb-6">
             <h3 class="text-lg font-semibold mb-3 text-gray-800 dark:text-gray-200">Manual Moves</h3>
@@ -131,6 +145,8 @@ const emit = defineEmits<{
     setSpeed: [speed: number]
     applyMove: [move: Move]
     importState: [stateString: string]
+    setEditMode: [value: boolean]
+    setSelectedColor: [color: import('../types/cube').Color]
 }>()
 
 const basicMoves: Move[] = [
@@ -159,6 +175,26 @@ const prefillState = () => {
     stateInput.value = JSON.stringify(props.cubeState)
 }
 const applyState = () => emit('importState', stateInput.value)
+
+// Edit mode state
+const isEditing = ref(false)
+const colors = [
+    { key: 'white', hex: '#FFFFFF' },
+    { key: 'yellow', hex: '#FFD500' },
+    { key: 'red', hex: '#B71234' },
+    { key: 'orange', hex: '#FF5800' },
+    { key: 'green', hex: '#009E60' },
+    { key: 'blue', hex: '#0046AD' }
+]
+const selectedColor = ref<'white' | 'yellow' | 'red' | 'orange' | 'green' | 'blue'>('white')
+const toggleEdit = () => {
+    isEditing.value = !isEditing.value
+    emit('setEditMode', isEditing.value)
+}
+const selectColor = (c: any) => {
+    selectedColor.value = c
+    emit('setSelectedColor', c)
+}
 </script>
 
 <style scoped>

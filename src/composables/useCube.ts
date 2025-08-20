@@ -1,8 +1,8 @@
 import { ref, computed, reactive } from 'vue';
 import { CubeModel } from '../utils/cubeModel';
 import { LayerByLayerSolver } from '../utils/solver';
-import { Move } from '../types/cube';
-import type { SolutionStep, AnimationState } from '../types/cube';
+import { Move, Color } from '../types/cube';
+import type { SolutionStep, AnimationState, CubeState } from '../types/cube';
 
 export const useCube = () => {
   const cubeModel = ref(new CubeModel());
@@ -182,6 +182,17 @@ export const useCube = () => {
     return JSON.stringify(cubeState.value);
   };
 
+  const setSticker = (args: { face: keyof CubeState; row: number; col: number; color: Color }) => {
+    const { face, row, col, color } = args;
+    const state = cubeModel.value.getState();
+    if (!state[face] || !state[face].colors?.[row]?.[col]) return;
+    state[face].colors[row][col] = color;
+    cubeModel.value.setState(state);
+    solution.value = [];
+    animationState.currentStep = 0;
+    error.value = null;
+  };
+
   return {
     // State
     cubeState,
@@ -205,5 +216,6 @@ export const useCube = () => {
     setSpeed,
     importState,
     exportState,
+    setSticker,
   };
 };

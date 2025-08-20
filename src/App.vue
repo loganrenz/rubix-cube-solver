@@ -8,7 +8,7 @@
                 <!-- 3D Cube View -->
                 <div class="mb-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4"
                     style="height: 60vh; max-height: 400px;">
-                    <CubeVisualization :cube-state="cubeState" :current-move="currentMove?.move || null" :is-dark="isDark" />
+                    <CubeVisualization :cube-state="cubeState" :current-move="currentMove?.move || null" :is-dark="isDark" :edit-mode="editMode" :selected-color="selectedColor as any" @sticker-click="onStickerClick" />
                 </div>
 
                 <!-- Tabbed Interface for Controls/Solution -->
@@ -38,7 +38,7 @@
                             :is-solved="isSolved" :error="error" :current-move="currentMove" :cube-state="cubeState"
                             @scramble="scramble" @solve="solve" @reset="reset" @play="play" @pause="pause"
                             @step-forward="stepForward" @step-backward="stepBackward" @set-speed="setSpeed"
-                            @apply-move="applyMove" @import-state="importState" />
+                            @apply-move="applyMove" @import-state="importState" @set-edit-mode="(v: boolean) => editMode = v" @set-selected-color="(c: any) => selectedColor = c" />
 
                         <SolutionDisplay v-show="activeTab === 'solution'" :solution="solution"
                             :current-step-index="animationState.currentStep - 1" />
@@ -54,14 +54,14 @@
                         :is-solving="isSolving" :is-solved="isSolved" :error="error" :current-move="currentMove" :cube-state="cubeState"
                         @scramble="scramble" @solve="solve" @reset="reset" @play="play" @pause="pause"
                         @step-forward="stepForward" @step-backward="stepBackward" @set-speed="setSpeed"
-                        @apply-move="applyMove" @import-state="importState" />
+                        @apply-move="applyMove" @import-state="importState" @set-edit-mode="(v: boolean) => editMode = v" @set-selected-color="(c: any) => selectedColor = c" />
                 </div>
 
                 <!-- Center - 3D Cube -->
                 <div class="col-span-6">
                     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4"
                         style="height: 70vh; min-height: 500px;">
-                        <CubeVisualization :cube-state="cubeState" :current-move="currentMove?.move || null" :is-dark="isDark" />
+                        <CubeVisualization :cube-state="cubeState" :current-move="currentMove?.move || null" :is-dark="isDark" :edit-mode="editMode" :selected-color="selectedColor as any" @sticker-click="onStickerClick" />
                     </div>
                 </div>
 
@@ -111,12 +111,20 @@ const {
     stepForward,
     stepBackward,
     setSpeed,
-    importState
+    importState,
+    setSticker
 } = useCube()
 
 // UI state
 const activeTab = ref<'controls' | 'solution'>('controls')
 const showHelp = ref(false)
+const editMode = ref(false)
+const selectedColor = ref<'white' | 'yellow' | 'red' | 'orange' | 'green' | 'blue'>('white')
+
+const onStickerClick = (payload: { face: any; row: number; col: number }) => {
+    if (!editMode.value) return
+    setSticker({ face: payload.face, row: payload.row, col: payload.col, color: selectedColor.value as any })
+}
 
 // Show help on first visit
 onMounted(() => {
