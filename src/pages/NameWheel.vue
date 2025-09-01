@@ -76,6 +76,7 @@ const names = ref<string[]>([]);
 const wheelCanvas = ref<HTMLCanvasElement | null>(null);
 const resultText = ref('');
 const recentSelections = ref<string[]>([]);
+const lastSelectedName = ref<string | null>(null);
 
 let isSpinning = false;
 
@@ -171,6 +172,19 @@ const drawWheel = () => {
         ctx.fillText(name, radius - 10, 10);
         ctx.restore();
     });
+
+    // Subtle 3D shading overlay (radial gradient highlight and rim vignette)
+    ctx.save();
+    const rg = ctx.createRadialGradient(centerX, centerY, radius * 0.05, centerX, centerY, radius);
+    rg.addColorStop(0, 'rgba(255,255,255,0.35)');
+    rg.addColorStop(0.55, 'rgba(255,255,255,0.03)');
+    rg.addColorStop(0.85, 'rgba(0,0,0,0.15)');
+    rg.addColorStop(1, 'rgba(0,0,0,0.30)');
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
 };
 
 const spinWheel = () => {
@@ -183,7 +197,7 @@ const spinWheel = () => {
     resultText.value = '';
     isSpinning = true;
 
-    const randomIndex = Math.floor(Math.random() * names.value.length);
+    let randomIndex = Math.floor(Math.random() * names.value.length);
     const sliceAngle = 360 / names.value.length;
     const baseRotations = 6 + Math.floor(Math.random() * 3); // 6-8 full spins
     const wedgeCenter = (randomIndex * sliceAngle) + (sliceAngle / 2);
@@ -196,12 +210,25 @@ const spinWheel = () => {
     canvas.style.transition = 'transform 4500ms cubic-bezier(0.12, 0.11, 0, 1)';
     canvas.style.transform = `rotate(${targetAngle}deg)`;
 
+    // Avoid selecting the same name as last time
+    if (lastSelectedName.value && names.value.length > 1 && names.value[randomIndex] === lastSelectedName.value) {
+        let attempts = 0;
+        while (attempts < 10 && names.value[randomIndex] === lastSelectedName.value) {
+            randomIndex = Math.floor(Math.random() * names.value.length);
+            attempts++;
+        }
+        if (names.value[randomIndex] === lastSelectedName.value) {
+            randomIndex = (randomIndex + 1) % names.value.length;
+        }
+    }
+
     const finalize = () => {
         const selectedName = names.value[randomIndex];
         resultText.value = `Selected: ${selectedName}`;
         recentSelections.value.unshift(selectedName);
         if (recentSelections.value.length > 5) recentSelections.value.length = 5;
         saveRecent();
+        lastSelectedName.value = selectedName;
         canvas.style.transition = 'none';
         canvas.style.transform = 'rotate(0deg)';
         isSpinning = false;
@@ -235,6 +262,7 @@ onMounted(() => {
             const parsedRecent = JSON.parse(savedRecent);
             if (Array.isArray(parsedRecent)) {
                 recentSelections.value = parsedRecent.filter((v) => typeof v === 'string').slice(0, 5);
+                lastSelectedName.value = recentSelections.value[0] ?? null;
             }
         }
         if (names.value.length === 0) {
