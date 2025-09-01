@@ -3,38 +3,51 @@
         <AppHeader :is-dark="isDark" @toggle-theme="toggleTheme" />
 
         <main class="container mx-auto px-4 py-6">
-            <div class="max-w-md mx-auto text-center">
-                <h1 class="text-2xl font-bold text-pink-500 mb-4">Random Kids Name Wheel</h1>
-
-                <div id="input-section" class="mb-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                    <input v-model="nameInput" @keyup.enter="addName" type="text" placeholder="Enter a name"
-                        class="px-3 py-2 w-full sm:w-64 border rounded" />
-                    <div class="flex gap-2">
-                        <button @click="addName" class="px-4 py-2 bg-green-600 text-white rounded w-full sm:w-auto">Add</button>
-                        <button @click="clearAll" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded w-full sm:w-auto">Clear</button>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start max-w-5xl mx-auto">
+                <section class="order-2 lg:order-1">
+                    <div id="wheel-card" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
+                        <div class="text-center mb-3">
+                            <h1 class="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">Random Kids Name Wheel</h1>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Tap add, then spin to pick a name</p>
+                        </div>
+                        <div id="wheel-container" class="relative mx-auto border-4 border-gray-900 dark:border-gray-200 rounded-full overflow-hidden select-none"
+                            :style="{ width: sizePx, height: sizePx }">
+                            <canvas ref="wheelCanvas" id="wheel" class="block transition-transform ease-out duration-[5000ms]"></canvas>
+                            <div id="pointer" class="absolute -top-3 left-1/2 -translate-x-1/2"
+                                style="width: 0; height: 0; border-left: 18px solid transparent; border-right: 18px solid transparent; border-bottom: 34px solid #ef4444;"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="w-16 h-16 rounded-full bg-white/80 dark:bg-gray-900/80 backdrop-blur border border-gray-200 dark:border-gray-700 flex items-center justify-center text-xs font-semibold text-gray-700 dark:text-gray-200">Spin</div>
+                            </div>
+                        </div>
+                        <div id="result" class="mt-4 text-center text-2xl font-bold text-orange-600 min-h-[2.25rem]">{{ resultText }}</div>
+                        <button @click="spinWheel" :disabled="isSpinning || names.length < 2"
+                            class="mt-2 w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99]">
+                            Spin the Wheel
+                        </button>
                     </div>
-                </div>
+                </section>
 
-                <ul id="names-list" class="mb-3 max-h-48 overflow-auto">
-                    <li v-for="(name, index) in names" :key="index"
-                        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 mx-auto my-1 p-2 w-full flex items-center justify-between rounded">
-                        <span class="truncate text-left">{{ name }}</span>
-                        <button @click="removeName(index)" class="px-2 py-1 bg-red-600 text-white rounded ml-2">Remove</button>
-                    </li>
-                </ul>
-
-                <button @click="spinWheel" :disabled="isSpinning || names.length < 2"
-                    class="px-4 py-2 bg-blue-600 text-white rounded my-2 disabled:opacity-50 disabled:cursor-not-allowed w-full">
-                    Spin the Wheel!
-                </button>
-
-                <div id="wheel-container" class="relative mx-auto border-2 border-gray-700 rounded-full overflow-hidden"
-                    :style="{ width: sizePx, height: sizePx }">
-                    <canvas ref="wheelCanvas" id="wheel" class="w-full h-full transition-transform ease-out duration-[5000ms]"></canvas>
-                    <div id="pointer" class="absolute -top-2 left-1/2 -translate-x-1/2" style="width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-bottom: 30px solid red;"></div>
-                </div>
-
-                <div id="result" class="mt-4 text-2xl text-orange-600 min-h-[2.25rem]">{{ resultText }}</div>
+                <aside class="order-1 lg:order-2">
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
+                        <div class="flex gap-2 mb-3">
+                            <input v-model="nameInput" @keyup.enter="addName" type="text" placeholder="Enter a name"
+                                class="px-3 py-2 flex-1 border rounded" />
+                            <button @click="addName" class="px-4 py-2 bg-green-600 text-white rounded">Add</button>
+                        </div>
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <button @click="loadDefaults" class="px-3 py-1.5 bg-indigo-600 text-white rounded text-sm">Load Default 7</button>
+                            <button @click="clearAll" class="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded text-sm">Clear</button>
+                        </div>
+                        <div class="flex flex-wrap gap-2 max-h-48 overflow-auto">
+                            <span v-for="(name, index) in names" :key="index"
+                                class="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-pink-50 text-pink-700 border border-pink-200 dark:bg-pink-900/20 dark:text-pink-200 dark:border-pink-800">
+                                <span class="max-w-[9rem] truncate">{{ name }}</span>
+                                <button @click="removeName(index)" class="text-pink-600 hover:text-pink-800 dark:text-pink-300">×</button>
+                            </span>
+                        </div>
+                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Saved locally on this device.</p>
+                    </div>
+                </aside>
             </div>
         </main>
     </div>
@@ -58,6 +71,7 @@ const size = ref(360);
 const sizePx = computed(() => `${size.value}px`);
 
 const STORAGE_KEY = 'nameWheel.names';
+const DEFAULT_NAMES = ['Claire', 'Jack', 'Ben', 'Lily', 'Lucy', 'Tucker', 'Charlie'];
 
 const addName = () => {
     const name = nameInput.value.trim();
@@ -75,6 +89,13 @@ const removeName = (index: number) => {
 
 const clearAll = () => {
     names.value = [];
+    resultText.value = '';
+    saveNames();
+    drawWheel();
+};
+
+const loadDefaults = () => {
+    names.value = [...DEFAULT_NAMES];
     resultText.value = '';
     saveNames();
     drawWheel();
@@ -151,11 +172,12 @@ const spinWheel = () => {
 
     const randomIndex = Math.floor(Math.random() * names.value.length);
     const sliceAngle = 360 / names.value.length;
-    const targetAngle = (360 * 5) + (360 - (randomIndex * sliceAngle + sliceAngle / 2));
+    const baseRotations = 6 + Math.floor(Math.random() * 3); // 6-8 full spins
+    const targetAngle = (360 * baseRotations) + (360 - (randomIndex * sliceAngle + sliceAngle / 2));
 
     const canvas = wheelCanvas.value;
     if (!canvas) return;
-    canvas.style.transition = 'transform 5s ease-out';
+    canvas.style.transition = 'transform 4500ms cubic-bezier(0.12, 0.11, 0, 1)';
     canvas.style.transform = `rotate(${targetAngle}deg)`;
 
     setTimeout(() => {
@@ -164,7 +186,7 @@ const spinWheel = () => {
         canvas.style.transition = 'none';
         canvas.style.transform = 'rotate(0deg)';
         isSpinning = false;
-    }, 5000);
+    }, 4600);
 };
 
 onMounted(() => {
@@ -175,6 +197,9 @@ onMounted(() => {
             if (Array.isArray(parsed)) {
                 names.value = parsed.filter((v) => typeof v === 'string');
             }
+        }
+        if (names.value.length === 0) {
+            names.value = [...DEFAULT_NAMES];
         }
     } catch {}
     updateSize();
