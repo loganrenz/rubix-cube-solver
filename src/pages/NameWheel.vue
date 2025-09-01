@@ -10,13 +10,13 @@
                             <h1 class="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">Random Kids Name Wheel</h1>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Tap add, then spin to pick a name</p>
                         </div>
-                        <div id="wheel-container" class="relative mx-auto border-4 border-gray-900 dark:border-gray-200 rounded-full overflow-hidden select-none"
+                        <div id="wheel-container" class="relative mx-auto border-4 border-gray-900 dark:border-gray-200 rounded-full overflow-hidden select-none ring-2 ring-cyan-400/50 shadow-[0_0_40px_rgba(34,211,238,0.35)]"
                             :style="{ width: sizePx, height: sizePx }">
-                            <canvas ref="wheelCanvas" id="wheel" class="block transition-transform ease-out duration-[5000ms]"></canvas>
+                            <canvas ref="wheelCanvas" id="wheel" class="block will-change-transform transition-transform ease-out duration-[5000ms]"></canvas>
                             <div id="pointer" class="absolute -top-3 left-1/2 -translate-x-1/2"
-                                style="width: 0; height: 0; border-left: 18px solid transparent; border-right: 18px solid transparent; border-bottom: 34px solid #ef4444;"></div>
+                                style="width: 0; height: 0; border-left: 18px solid transparent; border-right: 18px solid transparent; border-bottom: 34px solid #22d3ee; filter: drop-shadow(0 2px 10px rgba(34, 211, 238, 0.85));"></div>
                             <div class="absolute inset-0 flex items-center justify-center">
-                                <div class="w-16 h-16 rounded-full bg-white/80 dark:bg-gray-900/80 backdrop-blur border border-gray-200 dark:border-gray-700 flex items-center justify-center text-xs font-semibold text-gray-700 dark:text-gray-200">Spin</div>
+                                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-200/70 to-fuchsia-200/70 dark:from-cyan-900/40 dark:to-fuchsia-900/40 backdrop-blur border border-cyan-300/60 dark:border-cyan-500/40 shadow-[0_0_20px_rgba(34,211,238,0.35)] flex items-center justify-center text-xs font-semibold text-gray-700 dark:text-gray-200">Spin</div>
                             </div>
                         </div>
                         <div id="result" class="mt-4 text-center text-2xl font-bold text-orange-600 min-h-[2.25rem]">{{ resultText }}</div>
@@ -151,7 +151,7 @@ const drawWheel = () => {
     const centerY = height / 2;
     const radius = width / 2;
     const angle = (2 * Math.PI) / names.value.length;
-    const colors = ['#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bf6ff', '#a0c4ff', '#bdb2ff', '#ffc6ff'];
+    const colors = ['#22d3ee', '#a78bfa', '#f472b6', '#fb7185', '#34d399', '#f59e0b', '#60a5fa', '#f97316'];
 
     names.value.forEach((name, i) => {
         ctx.beginPath();
@@ -166,7 +166,7 @@ const drawWheel = () => {
         ctx.translate(centerX, centerY);
         ctx.rotate(i * angle + angle / 2);
         ctx.textAlign = 'right';
-        ctx.fillStyle = '#000';
+        ctx.fillStyle = isDark.value ? '#ffffff' : '#111111';
         ctx.font = '16px Arial';
         ctx.fillText(name, radius - 10, 10);
         ctx.restore();
@@ -186,26 +186,39 @@ const spinWheel = () => {
     const randomIndex = Math.floor(Math.random() * names.value.length);
     const sliceAngle = 360 / names.value.length;
     const baseRotations = 6 + Math.floor(Math.random() * 3); // 6-8 full spins
-    const targetAngle = (360 * baseRotations) + (360 - (randomIndex * sliceAngle + sliceAngle / 2));
+    const wedgeCenter = (randomIndex * sliceAngle) + (sliceAngle / 2);
+    let alignToTop = 270 - wedgeCenter; // pointer at 12 o'clock (270deg from +X)
+    while (alignToTop < 0) alignToTop += 360;
+    const targetAngle = (360 * baseRotations) + alignToTop;
 
     const canvas = wheelCanvas.value;
     if (!canvas) return;
     canvas.style.transition = 'transform 4500ms cubic-bezier(0.12, 0.11, 0, 1)';
     canvas.style.transform = `rotate(${targetAngle}deg)`;
 
-    setTimeout(() => {
+    const finalize = () => {
         const selectedName = names.value[randomIndex];
         resultText.value = `Selected: ${selectedName}`;
-        // update recent selections (most recent first, max 5)
         recentSelections.value.unshift(selectedName);
-        if (recentSelections.value.length > 5) {
-            recentSelections.value.length = 5;
-        }
+        if (recentSelections.value.length > 5) recentSelections.value.length = 5;
         saveRecent();
         canvas.style.transition = 'none';
         canvas.style.transform = 'rotate(0deg)';
         isSpinning = false;
-    }, 4600);
+    };
+
+    const onEnd = () => {
+        canvas.removeEventListener('transitionend', onEnd);
+        finalize();
+    };
+    canvas.addEventListener('transitionend', onEnd, { once: true });
+    // Fallback in case transitionend is missed
+    setTimeout(() => {
+        if (isSpinning) {
+            canvas.removeEventListener('transitionend', onEnd);
+            finalize();
+        }
+    }, 4800);
 };
 
 onMounted(() => {
