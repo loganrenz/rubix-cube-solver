@@ -8,11 +8,14 @@
                         <span class="text-white font-bold text-xl">RC</span>
                     </div>
                     <h1 class="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-200">
-                        Rubik's Cube Solver
+                        <router-link to="/" class="hover:underline">Rubik's Cube Solver</router-link>
                     </h1>
                 </div>
 
                 <div class="flex items-center gap-2 sm:gap-4">
+                    <router-link to="/wheel" class="px-3 py-2 rounded text-sm font-medium bg-blue-600 text-white hover:bg-blue-700">
+                        Name Wheel
+                    </router-link>
                     <!-- Help button -->
                     <button @click="$emit('showHelp')"
                         class="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
