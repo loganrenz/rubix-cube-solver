@@ -35,7 +35,7 @@
                             <button @click="addName" class="px-4 py-2 bg-green-600 text-white rounded">Add</button>
                         </div>
                         <div class="flex flex-wrap gap-2 mb-3">
-                            <button @click="loadDefaults" class="px-3 py-1.5 bg-indigo-600 text-white rounded text-sm">Load Default 7</button>
+                            <button @click="loadDefaults" class="px-3 py-1.5 bg-indigo-600 text-white rounded text-sm">Load Default 8</button>
                             <button @click="clearAll" class="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded text-sm">Clear</button>
                         </div>
                         <div class="flex flex-wrap gap-2 max-h-48 overflow-auto">
@@ -71,7 +71,7 @@ const size = ref(360);
 const sizePx = computed(() => `${size.value}px`);
 
 const STORAGE_KEY = 'nameWheel.names';
-const DEFAULT_NAMES = ['Claire', 'Jack', 'Ben', 'Lily', 'Lucy', 'Tucker', 'Charlie'];
+const DEFAULT_NAMES = ['Claire', 'Jack', 'Ben', 'Lily', 'Lucy', 'Tucker', 'Charlie', 'Bryce'];
 
 const addName = () => {
     const name = nameInput.value.trim();
