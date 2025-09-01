@@ -24,6 +24,17 @@
                             class="mt-2 w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99]">
                             Spin the Wheel
                         </button>
+                        <div class="mt-4 text-left">
+                            <h2 class="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Recent selections</h2>
+                            <div class="flex flex-wrap gap-2 justify-center">
+                                <span v-for="(n, i) in recentSelections" :key="i"
+                                    class="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-900/20 dark:text-amber-200 dark:border-amber-800">
+                                    <span class="text-xs opacity-70">#{{ i + 1 }}</span>
+                                    <span class="font-medium">{{ n }}</span>
+                                </span>
+                                <span v-if="recentSelections.length === 0" class="text-xs text-gray-500 dark:text-gray-400">No spins yet</span>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
@@ -64,6 +75,7 @@ const nameInput = ref('');
 const names = ref<string[]>([]);
 const wheelCanvas = ref<HTMLCanvasElement | null>(null);
 const resultText = ref('');
+const recentSelections = ref<string[]>([]);
 
 let isSpinning = false;
 
@@ -71,6 +83,7 @@ const size = ref(360);
 const sizePx = computed(() => `${size.value}px`);
 
 const STORAGE_KEY = 'nameWheel.names';
+const RECENT_KEY = 'nameWheel.recent';
 const DEFAULT_NAMES = ['Claire', 'Jack', 'Ben', 'Lily', 'Lucy', 'Tucker', 'Charlie', 'Bryce'];
 
 const addName = () => {
@@ -183,6 +196,12 @@ const spinWheel = () => {
     setTimeout(() => {
         const selectedName = names.value[randomIndex];
         resultText.value = `Selected: ${selectedName}`;
+        // update recent selections (most recent first, max 5)
+        recentSelections.value.unshift(selectedName);
+        if (recentSelections.value.length > 5) {
+            recentSelections.value.length = 5;
+        }
+        saveRecent();
         canvas.style.transition = 'none';
         canvas.style.transform = 'rotate(0deg)';
         isSpinning = false;
@@ -196,6 +215,13 @@ onMounted(() => {
             const parsed = JSON.parse(saved);
             if (Array.isArray(parsed)) {
                 names.value = parsed.filter((v) => typeof v === 'string');
+            }
+        }
+        const savedRecent = localStorage.getItem(RECENT_KEY);
+        if (savedRecent) {
+            const parsedRecent = JSON.parse(savedRecent);
+            if (Array.isArray(parsedRecent)) {
+                recentSelections.value = parsedRecent.filter((v) => typeof v === 'string').slice(0, 5);
             }
         }
         if (names.value.length === 0) {
@@ -214,6 +240,12 @@ onBeforeUnmount(() => {
 const saveNames = () => {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(names.value));
+    } catch {}
+};
+
+const saveRecent = () => {
+    try {
+        localStorage.setItem(RECENT_KEY, JSON.stringify(recentSelections.value));
     } catch {}
 };
 
